@@ -1,15 +1,39 @@
 const BASE_URL = "https://api.themoviedb.org/3";
 
-// 1. Интерфэйсүүдээ export хийж дээд талд нь байрлуулна
+// 1. Интерфэйсүүд (Бүх файлд ижил байхаар нэгтгэв)
 export interface Movie {
   id: number;
   title: string;
   poster_path: string;
-  backdrop_path?: string;
+  backdrop_path: string | null;
   vote_average: number;
-  overview?: string;
-  release_date?: string;
-  genre_ids?: number[]; // Энийг нэмсэн (Search хийсэн үед жанраар шүүхэд хэрэгтэй)
+  vote_count: number;
+  overview: string;
+  release_date: string;
+  runtime?: number;
+  genres?: Genre[];
+  genre_ids?: number[];
+}
+
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+export interface VideoResult {
+  id: string;
+  key: string;
+  site: string;
+  type: string;
+}
+
+export interface MovieCredits {
+  cast: {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string | null;
+  }[];
 }
 
 export interface SimilarResponse {
@@ -17,11 +41,6 @@ export interface SimilarResponse {
   total_pages: number;
   total_results: number;
   page: number;
-}
-
-export interface Genre {
-  id: number;
-  name: string;
 }
 
 // 2. Options тохиргоо
@@ -34,103 +53,91 @@ const options = {
   next: { revalidate: 3600 },
 };
 
-// 3. Үндсэн fetch функц
-async function fetchMovies(path: string, page: number = 1) {
-  const res = await fetch(
-    `${BASE_URL}${path}?language=en-US&page=${page}`,
-    options,
-  );
-  if (!res.ok) throw new Error(`Failed to fetch: ${path}`);
+// 3. Туслах fetch функц
+async function fetchFromTMDB(path: string, params: string = "") {
+  const url = `${BASE_URL}${path}?language=en-US${params}`;
+  const res = await fetch(url, options);
+
+  if (!res.ok) {
+    throw new Error(`TMDB Error: ${res.status} at ${path}`);
+  }
   return res.json();
 }
 
-// --- Функцууд ---
+// --- Экспортлох функцүүд ---
 
-export const getMoviesByCategory = (category: string, page: number = 1) => {
+// Ангиллаар авах (Upcoming, Popular, Top Rated)
+export const getMoviesByCategory = (
+  category: string,
+  page: number = 1,
+): Promise<SimilarResponse> => {
   const paths: Record<string, string> = {
     upcoming: "/movie/upcoming",
     popular: "/movie/popular",
     top_rated: "/movie/top_rated",
   };
-  return fetchMovies(paths[category] || "/movie/popular", page);
+  return fetchFromTMDB(paths[category] || "/movie/popular", `&page=${page}`);
 };
 
+// Home page-д хэрэгтэй бүх датаг зэрэг авах
 export const getHomePageData = () => {
   return Promise.all([
-    fetchMovies("/movie/top_rated", 1),
-    fetchMovies("/movie/popular", 1),
-    fetchMovies("/movie/upcoming", 1),
-    fetchMovies("/movie/now_playing", 1),
+    getMoviesByCategory("top_rated", 1),
+    getMoviesByCategory("popular", 1),
+    getMoviesByCategory("upcoming", 1),
+    fetchFromTMDB("/movie/now_playing", "&page=1"),
   ]);
 };
 
-export const getMovieDetail = async (id: string) => {
-  const res = await fetch(`${BASE_URL}/movie/${id}?language=en-US`, options);
-  if (!res.ok) throw new Error("Failed to fetch movie detail");
-  return res.json();
+// Киноны дэлгэрэнгүй
+export const getMovieDetail = async (id: string): Promise<Movie> => {
+  return fetchFromTMDB(`/movie/${id}`);
 };
 
-export const getMovieCredits = async (id: string) => {
-  const res = await fetch(
-    `${BASE_URL}/movie/${id}/credits?language=en-US`,
-    options,
-  );
-  if (!res.ok) throw new Error("Failed to fetch credits");
-  return res.json();
+// Жүжигчдийн мэдээлэл
+export const getMovieCredits = async (id: string): Promise<MovieCredits> => {
+  return fetchFromTMDB(`/movie/${id}/credits`);
 };
 
-export const getMovieVideos = async (id: number) => {
-  const res = await fetch(
-    `${BASE_URL}/movie/${id}/videos?language=en-US`,
-    options,
-  );
-  if (!res.ok) throw new Error("Failed to fetch videos");
-  return res.json();
+// Киноны видео (Trailer)
+export const getMovieVideos = async (
+  id: number,
+): Promise<{ results: VideoResult[] }> => {
+  return fetchFromTMDB(`/movie/${id}/videos`);
 };
 
+// Төстэй кинонууд
 export const getSimilarMovies = async (
   id: string,
   page: number = 1,
 ): Promise<SimilarResponse> => {
-  const res = await fetch(
-    `${BASE_URL}/movie/${id}/similar?language=en-US&page=${page}`,
-    options,
-  );
-  if (!res.ok) throw new Error("Failed to fetch similar movies");
-  return res.json();
+  return fetchFromTMDB(`/movie/${id}/similar`, `&page=${page}`);
 };
 
+// Хайлт
 export const searchMovies = async (
   query: string,
   page: number = 1,
 ): Promise<SimilarResponse> => {
   if (!query) return { results: [], total_pages: 0, total_results: 0, page: 1 };
-
-  const res = await fetch(
-    `${BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=en-US&page=${page}`,
-    options,
+  return fetchFromTMDB(
+    "/search/movie",
+    `&query=${encodeURIComponent(query)}&page=${page}`,
   );
-  if (!res.ok) throw new Error("Search failed");
-  return res.json();
 };
 
+// Бүх жанрын жагсаалт
 export const getGenres = async (): Promise<{ genres: Genre[] }> => {
-  const res = await fetch(
-    `${BASE_URL}/genre/movie/list?language=en-US`,
-    options,
-  );
-  if (!res.ok) throw new Error("Failed to fetch genres");
-  return res.json();
+  return fetchFromTMDB("/genre/movie/list");
 };
 
+// Discover (Жанраар шүүх)
 export const getDiscoverMovies = async (
   genreIds: string,
   page: number = 1,
 ): Promise<SimilarResponse> => {
-  const res = await fetch(
-    `${BASE_URL}/discover/movie?language=en-US&with_genres=${genreIds}&page=${page}`,
-    options,
+  return fetchFromTMDB(
+    "/discover/movie",
+    `&with_genres=${genreIds}&page=${page}`,
   );
-  if (!res.ok) throw new Error("Failed to fetch discover movies");
-  return res.json();
 };
