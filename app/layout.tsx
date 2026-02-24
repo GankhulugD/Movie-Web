@@ -18,7 +18,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // ЭНЭ suppressHydrationWarning МАШ ЧУХАЛ!!!
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider
@@ -27,8 +26,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header categoryPath="home" />
-          {children}
+          {/* categoryPath-ийг устгасан, учир нь Header-т ийм prop байхгүй */}
+          <Header />
+          <main className="min-h-screen">{children}</main>
           <Footer />
         </ThemeProvider>
       </body>

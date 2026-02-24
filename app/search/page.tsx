@@ -197,7 +197,7 @@ export default async function SearchPage({
             </p>
             {query && genres && (
               <p className="text-sm opacity-40 mt-2">
-                Try removing some genres to see more results for "{query}".
+                Try removing some genres to see more results for {query}.
               </p>
             )}
           </div>
