@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export const MovieDetail = () => {
+export default function MovieDetail() {
   return (
     <div className="flex flex-col">
       <div className="flex">
@@ -39,4 +39,4 @@ export const MovieDetail = () => {
       </div>
     </div>
   );
-};
+}
