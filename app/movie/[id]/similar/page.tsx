@@ -1,30 +1,19 @@
-import { getSimilarMovies, getMovieDetail } from "@/app/utils/get-data";
+import {
+  getSimilarMovies,
+  getMovieDetail,
+  Movie,
+  SimilarResponse,
+} from "@/app/utils/get-data";
 import { MovieSectionFull } from "@/components/MovieSection";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-// Интерфэйсүүд
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  vote_average: number;
-}
-
-interface MovieDetail extends Movie {
-  overview: string;
-}
-
-interface SimilarResponse {
-  results: Movie[];
-  total_pages: number;
-}
 
 export default async function SimilarMoviesPage({
   params,
@@ -33,51 +22,82 @@ export default async function SimilarMoviesPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
+  const { id } = await params;
+  const { page } = await searchParams;
+  const currentPage = Number(page) || 1;
 
-  const id = resolvedParams.id;
-  const currentPage = Number(resolvedSearchParams.page) || 1;
-
-  // Төрөлжүүлсэн өгөгдөл таталт
-  const [movie, data]: [MovieDetail, SimilarResponse] = await Promise.all([
+  const [movie, data]: [Movie, SimilarResponse] = await Promise.all([
     getMovieDetail(id),
     getSimilarMovies(id, currentPage),
   ]);
 
   const totalPages = Math.min(data.total_pages, 500);
+  const createPageURL = (p: number | string) =>
+    `/movie/${id}/similar?page=${p}`;
 
   return (
-    <div className="bg-white dark:bg-[#09090B] text-black dark:text-white min-h-screen pt-10">
-      <div className="flex flex-col gap-8 pb-10">
-        <MovieSectionFull
-          title={`Movies Similar to "${movie.title}"`}
-          movies={data.results}
-          categoryPath=""
-        />
+    <div className="container mx-auto px-5 py-10 min-h-screen">
+      <h1 className="text-2xl font-bold mb-8">More like {movie.title}</h1>
+      <MovieSectionFull title="" movies={data.results} categoryPath="" />
 
-        <Pagination className="mt-8">
+      <div className="mt-12 mb-20">
+        <Pagination>
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href={`/movie/${id}/similar?page=${Math.max(1, currentPage - 1)}`}
+                href={currentPage > 1 ? createPageURL(currentPage - 1) : "#"}
                 className={
-                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                  currentPage <= 1 ? "pointer-events-none opacity-50" : ""
                 }
               />
             </PaginationItem>
 
             <PaginationItem>
-              <PaginationLink href="#" isActive>
-                {currentPage}
+              <PaginationLink
+                href={createPageURL(1)}
+                isActive={currentPage === 1}
+              >
+                1
               </PaginationLink>
             </PaginationItem>
 
+            {currentPage > 3 && <PaginationEllipsis />}
+
+            {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
+              .filter((p) => p > 1 && p < totalPages)
+              .map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    href={createPageURL(p)}
+                    isActive={currentPage === p}
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+            {currentPage < totalPages - 2 && <PaginationEllipsis />}
+
+            {totalPages > 1 && (
+              <PaginationItem>
+                <PaginationLink
+                  href={createPageURL(totalPages)}
+                  isActive={currentPage === totalPages}
+                >
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
             <PaginationItem>
               <PaginationNext
-                href={`/movie/${id}/similar?page=${Math.min(totalPages, currentPage + 1)}`}
+                href={
+                  currentPage < totalPages
+                    ? createPageURL(currentPage + 1)
+                    : "#"
+                }
                 className={
-                  currentPage === totalPages
+                  currentPage >= totalPages
                     ? "pointer-events-none opacity-50"
                     : ""
                 }

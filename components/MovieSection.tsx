@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Card } from "./Card";
 
-// Үндсэн киноны өгөгдлийн төрөл
 interface Movie {
   id: number;
   title: string;
@@ -9,7 +8,7 @@ interface Movie {
   vote_average: number;
 }
 
-// 1. Үндсэн нүүр хуудсанд ашиглагдах хэсэг (Эхний 10 кино)
+// 1. Home Page Section (Эхний 10 кино)
 export const MovieSection = ({
   title,
   movies,
@@ -20,19 +19,20 @@ export const MovieSection = ({
   categoryPath: string;
 }) => {
   return (
-    <div className="p-4 max-w-7xl mx-auto">
+    <div className="px-4 py-6 max-w-7xl mx-auto w-full overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-black dark:text-white">
+        <h2 className="text-xl md:text-2xl font-bold text-black dark:text-white truncate pr-2">
           {title}
         </h2>
         <Link
           href={`/category/${categoryPath}`}
-          className="text-black hover:underline dark:text-white"
+          className="text-sm font-semibold text-black hover:underline dark:text-white shrink-0"
         >
           See more →
         </Link>
       </div>
-      <div className="flex flex-wrap justify-center gap-4">
+      {/* Grid: Mobile дээр 2 эгнээ, Tablet дээр 3, Desktop дээр 5 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
         {movies.slice(0, 10).map((movie: Movie) => (
           <Card
             key={movie.id}
@@ -47,7 +47,7 @@ export const MovieSection = ({
   );
 };
 
-// 2. Ангилал болон ижил төстэй киноны "See more" хуудсанд зориулсан хэсэг (Бүх кино)
+// 2. Full Section (Similar See More хуудсанд зориулсан)
 export const MovieSectionFull = ({
   title,
   movies,
@@ -57,13 +57,15 @@ export const MovieSectionFull = ({
   categoryPath: string;
 }) => {
   return (
-    <div className="p-4 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-black dark:text-white">
-          {title}
-        </h2>
-      </div>
-      <div className="flex flex-wrap justify-center gap-4">
+    <div className="px-4 py-6 max-w-7xl mx-auto w-full overflow-hidden">
+      {title && (
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-black dark:text-white">
+            {title}
+          </h2>
+        </div>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
         {movies.map((movie: Movie) => (
           <Card
             key={movie.id}
@@ -78,7 +80,7 @@ export const MovieSectionFull = ({
   );
 };
 
-// 3. Киноны дэлгэрэнгүй хуудсанд зориулсан ижил төстэй киноны хэсэг
+// 3. Similar Section (Detail хуудасны доорх 5 кино)
 export const MovieSectionSimilar = ({
   title,
   movies,
@@ -89,19 +91,19 @@ export const MovieSectionSimilar = ({
   movieId: string;
 }) => {
   return (
-    <div className="p-4 max-w-7xl mx-auto">
+    <div className="px-4 py-6 max-w-7xl mx-auto w-full overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-black dark:text-white">
+        <h2 className="text-xl md:text-2xl font-bold text-black dark:text-white">
           {title}
         </h2>
         <Link
           href={`/movie/${movieId}/similar`}
-          className="text-black hover:underline dark:text-white font-semibold"
+          className="text-sm font-semibold text-black hover:underline dark:text-white"
         >
           See more →
         </Link>
       </div>
-      <div className="flex flex-wrap justify-center gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {movies.slice(0, 5).map((movie: Movie) => (
           <Card
             key={movie.id}

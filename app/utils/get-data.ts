@@ -99,6 +99,16 @@ export const getMovieCredits = async (id: string): Promise<MovieCredits> => {
   return fetchFromTMDB(`/movie/${id}/credits`);
 };
 
+export interface MovieCredits {
+  cast: {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string | null;
+  }[];
+  crew: { id: number; name: string; job: string }[]; // 'crew' заавал байх ёстой
+}
+
 // Киноны видео (Trailer)
 export const getMovieVideos = async (
   id: number,

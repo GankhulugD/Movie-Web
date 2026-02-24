@@ -5,7 +5,7 @@ import { ChevronDown, Search, Film, X, ArrowLeft } from "lucide-react";
 import { getGenres, Genre, Movie, searchMovies } from "@/app/utils/get-data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ModeToggle } from "./ModeToggle"; // ModeToggle-ийг нэмэв
+import { ModeToggle } from "./ModeToggle";
 import Image from "next/image";
 
 export const Header = () => {
@@ -17,28 +17,21 @@ export const Header = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const router = useRouter();
 
-  // Genre-уудыг татаж авах
   useEffect(() => {
     getGenres().then((data) => setGenres(data.genres));
   }, []);
 
-  // Хайлт хийх логик (Debounce)
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchValue.trim()) {
-        try {
-          const data = await searchMovies(searchValue);
-          setResults(data.results.slice(0, 5));
-          setShowResults(true);
-        } catch (error) {
-          console.error("Search error:", error);
-        }
+        const data = await searchMovies(searchValue);
+        setResults(data.results.slice(0, 5));
+        setShowResults(true);
       } else {
         setResults([]);
         setShowResults(false);
       }
     }, 300);
-
     return () => clearTimeout(delayDebounceFn);
   }, [searchValue]);
 
@@ -49,40 +42,36 @@ export const Header = () => {
   };
 
   return (
-    <div className="flex h-[59px] w-full items-center justify-between px-4 md:px-5 sticky top-0 bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-md z-50 border-b border-gray-200 dark:border-gray-800">
-      {/* Logo - Мобайл хайлт нээлттэй үед нуугдана */}
-      {!isMobileSearchOpen && (
-        <div className="flex gap-2 items-center text-[#4338CA] dark:text-[#6366F1] font-bold text-lg shrink-0">
-          <Film className="w-5 h-5" />
-          <Link href="/" className="hover:underline">
-            Movie Z
-          </Link>
-        </div>
-      )}
-
-      <div
-        className={`flex flex-1 justify-end md:justify-center items-center gap-2 ${isMobileSearchOpen ? "w-full" : ""}`}
-      >
-        {/* Genre Dropdown - Зөвхөн Desktop үед Search-ийн зүүн талд */}
+    <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div className="max-w-7xl mx-auto h-[59px] flex items-center justify-between px-4">
+        {/* Logo */}
         {!isMobileSearchOpen && (
-          <div className="relative">
-            <button
-              onClick={() => setIsGenreOpen(!isGenreOpen)}
-              className="hidden md:flex items-center gap-1 px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              Genres{" "}
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${isGenreOpen ? "rotate-180" : ""}`}
-              />
-            </button>
+          <Link
+            href="/"
+            className="flex gap-2 items-center text-[#4338CA] dark:text-[#6366F1] font-bold text-lg shrink-0"
+          >
+            <Film className="w-5 h-5" />
+            <span>Movie Z</span>
+          </Link>
+        )}
 
-            {isGenreOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-[-1]"
-                  onClick={() => setIsGenreOpen(false)}
+        <div
+          className={`flex flex-1 items-center justify-end gap-2 ${isMobileSearchOpen ? "w-full" : ""}`}
+        >
+          {/* Genre Dropdown (Desktop) */}
+          {!isMobileSearchOpen && (
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setIsGenreOpen(!isGenreOpen)}
+                className="flex items-center gap-1 px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Genres{" "}
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${isGenreOpen ? "rotate-180" : ""}`}
                 />
-                <div className="absolute top-full left-0 mt-2 w-[500px] bg-white dark:bg-[#09090B] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 grid grid-cols-3 gap-2 z-[60]">
+              </button>
+              {isGenreOpen && (
+                <div className="absolute top-full left-0 mt-2 w-[500px] bg-white dark:bg-[#09090B] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl p-4 grid grid-cols-3 gap-2 z-50">
                   {genres.map((genre) => (
                     <button
                       key={genre.id}
@@ -90,55 +79,48 @@ export const Header = () => {
                         router.push(`/search?genres=${genre.id}`);
                         setIsGenreOpen(false);
                       }}
-                      className="text-left text-sm p-2 border rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                      className="text-left text-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors border border-transparent hover:border-gray-200"
                     >
-                      {genre.name} ❯
+                      {genre.name}
                     </button>
                   ))}
                 </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Search Input Section */}
-        <div
-          className={`${isMobileSearchOpen ? "flex w-full" : "hidden md:flex"} relative max-w-md flex-1 items-center gap-2`}
-        >
-          {isMobileSearchOpen && (
-            <button
-              onClick={() => setIsMobileSearchOpen(false)}
-              className="p-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+              )}
+            </div>
           )}
 
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full bg-gray-100 dark:bg-gray-900 border-none rounded-md py-2 pl-10 pr-10 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onFocus={() => searchValue && setShowResults(true)}
-            />
-            {searchValue && (
-              <X
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 cursor-pointer text-gray-400"
-                onClick={() => {
-                  setSearchValue("");
-                  setShowResults(false);
-                }}
-              />
+          {/* Search Bar */}
+          <div
+            className={`${isMobileSearchOpen ? "flex w-full" : "hidden md:flex"} relative max-w-md flex-1 items-center gap-2`}
+          >
+            {isMobileSearchOpen && (
+              <button
+                onClick={() => setIsMobileSearchOpen(false)}
+                className="p-1"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
             )}
-          </div>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full bg-gray-100 dark:bg-gray-900 border-none rounded-md py-2 pl-10 pr-10 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+              />
+              {searchValue && (
+                <X
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 cursor-pointer text-gray-400"
+                  onClick={() => setSearchValue("")}
+                />
+              )}
+            </div>
 
-          {/* Quick Search Results Dropdown */}
-          {showResults && results.length > 0 && (
-            <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-[#09090B] border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl overflow-hidden z-50">
-              <div className="p-2">
+            {/* Quick Results */}
+            {showResults && results.length > 0 && (
+              <div className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-[#09090B] border border-gray-200 dark:border-gray-800 rounded-lg shadow-2xl z-50 overflow-hidden">
                 {results.map((movie) => (
                   <Link
                     key={movie.id}
@@ -146,9 +128,8 @@ export const Header = () => {
                     onClick={() => {
                       setShowResults(false);
                       setIsMobileSearchOpen(false);
-                      setSearchValue("");
                     }}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+                    className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <div className="relative w-8 h-12 shrink-0">
                       <Image
@@ -157,40 +138,39 @@ export const Header = () => {
                             ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
                             : "/no-image.png"
                         }
-                        alt={movie.title}
+                        alt=""
                         fill
                         className="object-cover rounded"
                       />
                     </div>
-                    <p className="text-sm font-medium truncate">
+                    <span className="text-sm font-medium truncate">
                       {movie.title}
-                    </p>
+                    </span>
                   </Link>
                 ))}
+                <button
+                  onClick={handleSeeMore}
+                  className="w-full py-2 bg-gray-50 dark:bg-gray-800/50 text-xs font-bold border-t border-gray-200 dark:border-gray-800"
+                >
+                  See all results
+                </button>
               </div>
+            )}
+          </div>
+
+          {!isMobileSearchOpen && (
+            <div className="flex items-center gap-1">
               <button
-                onClick={handleSeeMore}
-                className="w-full py-2 bg-gray-50 dark:bg-gray-800/50 text-xs font-semibold border-t border-gray-200 dark:border-gray-800"
+                onClick={() => setIsMobileSearchOpen(true)}
+                className="p-2 md:hidden hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
               >
-                See all results
+                <Search className="h-5 w-5" />
               </button>
+              <ModeToggle />
             </div>
           )}
         </div>
-
-        {/* Mobile Search Toggle Icon */}
-        {!isMobileSearchOpen && (
-          <button
-            onClick={() => setIsMobileSearchOpen(true)}
-            className="p-2 md:hidden hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
-          >
-            <Search className="h-5 w-5" />
-          </button>
-        )}
-
-        {/* Dark Mode Toggle */}
-        {!isMobileSearchOpen && <ModeToggle />}
       </div>
-    </div>
+    </nav>
   );
 };
