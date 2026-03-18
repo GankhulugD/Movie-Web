@@ -87,6 +87,7 @@ export default async function MovieDetailPage({
 
       {/* Content */}
       <div className="max-w-7xl mx-auto w-full px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Left: Storyline + Credits */}
         <div className="lg:col-span-2 space-y-8">
           <section>
             <h2 className="text-xl md:text-2xl font-bold mb-4">Storyline</h2>
@@ -117,24 +118,27 @@ export default async function MovieDetailPage({
           </section>
         </div>
 
-        <div className="space-y-6">
-          {trailer && (
-            <div className="w-full">
-              <h2 className="text-xl font-bold mb-4">Trailer</h2>
-              <div className="aspect-video rounded-xl overflow-hidden bg-black shadow-lg">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${trailer.key}`}
-                  allowFullScreen
-                  className="border-none"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Right: Genres or extra info — empty col placeholder */}
+        <div />
       </div>
 
+      {/* Trailer — full width */}
+      {trailer && (
+        <div className="max-w-7xl mx-auto w-full px-4 pb-10">
+          <h2 className="text-xl md:text-2xl font-bold mb-4">Trailer</h2>
+          <div className="w-full aspect-video rounded-xl overflow-hidden bg-black shadow-lg">
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${trailer.key}`}
+              allowFullScreen
+              className="border-none"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Similar Movies */}
       <div className="max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-center px-4 mb-2">
           <h2 className="text-xl md:text-2xl font-bold">More like this</h2>
